@@ -1,4 +1,4 @@
-import { BlockChain, Transaction } from "./blockchain";
+import { BlockChain, Transaction } from "./BlockChain/index.js";
 
 const newBlockChain = new BlockChain();
 newBlockChain.createTransactions(new Transaction("address1", "address2", 100));

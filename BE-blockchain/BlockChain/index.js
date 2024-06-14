@@ -1,5 +1,5 @@
 import SHA256 from "crypto-js";
-import { DIFFICULTY, MINE_REWARD } from "./constants.js";
+import { DIFFICULTY, MINE_REWARD } from "../constants.js";
 
 export class Transaction {
   constructor(fromAddress, toAddress, amount) {
