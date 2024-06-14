@@ -1,0 +1,24 @@
+{
+  "name": "be-blockchain",
+  "version": "1.0.0",
+  "description": "Backend for the block chain project",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node main.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "."
+  },
+  "keywords": [
+    "block-chain",
+    "crypto"
+  ],
+  "author": "Prakhar Srivastava",
+  "license": "ISC",
+  "dependencies": {
+    "crypto-js": "^4.2.0"
+  }
+}
