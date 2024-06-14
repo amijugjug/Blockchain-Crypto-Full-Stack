@@ -1,11 +1,42 @@
 import SHA256 from "crypto-js";
 import { DIFFICULTY, MINE_REWARD } from "../constants.js";
+import EC from "elliptic/ec";
+
+const ec = new EC();
 
 export class Transaction {
   constructor(fromAddress, toAddress, amount) {
     this.fromAddress = fromAddress;
     this.toAddress = toAddress;
     this.amount = amount;
+  }
+
+  calculateHash() {
+    return SHA256.SHA256(
+      this.fromAddress + this.toAddress + this.amount
+    ).toString();
+  }
+
+  signTransaction(signingKey) {
+    if (signingKey.getPublic("hex") !== this.fromAddress) {
+      throw new Error("You cannot sign transactions for other wallets");
+    }
+
+    const hashTx = this.calculateHash();
+    const signature = signingKey.sign(hashTx, "base64");
+    this.signature = signature.toDER();
+  }
+
+  isValid() {
+    // In case of mining rewards although from address is null still it is a valid transaction.
+    if (this.fromAddress === null) return true;
+
+    if (!this.signature || this.signature.length === 0) {
+      throw new Error("No signature in this transaction");
+    }
+
+    const publicKey = ec.keyFromPublic(this.fromAddress, "hex");
+    return publicKey.verify(this.calculateHash(), this.signature);
   }
 }
 
@@ -37,6 +68,16 @@ class Block {
 
     console.log("Block mined: " + this.hash);
   }
+
+  hasValidTransactions() {
+    for (const tx of this.transaction) {
+      if (!tx.isValid()) {
+        return false;
+      }
+    }
+
+    return true;
+  }
 }
 
 export class BlockChain {
@@ -67,8 +108,14 @@ export class BlockChain {
     ];
   }
 
-  createTransactions(transaction) {
-    this.pendingTransactions.push(transaction);
+  addTransaction(transaction) {
+    if (!transaction.fromAddress || !transaction.toAddress)
+      throw new Error("Transaction must include from and to address");
+
+    if (transaction.isValid())
+      throw new Error("Can not add a transaction that is not valid to chain");
+
+    if (!transaction.isValid()) this.pendingTransactions.push(transaction);
   }
 
   getBalanceOfAddress(address) {
@@ -94,13 +141,11 @@ export class BlockChain {
       const currentBlock = this.chain[i];
       const previousBlock = this.chain[i - 1];
 
-      if (currentBlock.hash !== currentBlock.calculateHash()) {
-        return false;
-      }
+      if (!currentBlock.hasValidTransactions()) return false;
 
-      if (currentBlock.previousHash !== previousBlock.hash) {
-        return false;
-      }
+      if (currentBlock.hash !== currentBlock.calculateHash()) return false;
+
+      if (currentBlock.previousHash !== previousBlock.hash) return false;
     }
     return true;
   }
